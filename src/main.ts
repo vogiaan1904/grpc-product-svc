@@ -10,9 +10,10 @@ import { RpcException, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 import { protobufPackage } from './protos/product.pb';
 import { GrpcExceptionFilter } from './products/products.controller';
+import { AllExceptionsFilter } from './common/filters/grpc-exception.filter';
 
 async function bootstrap() {
-    const logger = new Logger('Bootstrap');
+  const logger = new Logger('Bootstrap');
 
   try {
     const app: INestMicroservice = await NestFactory.createMicroservice(
@@ -29,20 +30,13 @@ async function bootstrap() {
 
     app.useGlobalPipes(
       new ValidationPipe({
-        whitelist: true,
         transform: true,
-        exceptionFactory: (errors) => {
-          logger.error('Validation failed:', errors);
-          return new RpcException({
-            code: HttpStatus.BAD_REQUEST,
-            message: 'Validation failed',
-            details: errors,
-          });
-        },
+        whitelist: true,
+        forbidNonWhitelisted: true,
       }),
     );
 
-    app.useGlobalFilters(new GrpcExceptionFilter());
+    app.useGlobalFilters(new AllExceptionsFilter());
     app.enableShutdownHooks();
 
     await app.listen();

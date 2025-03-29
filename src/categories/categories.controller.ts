@@ -12,6 +12,7 @@ import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { CreateCategoryDto } from './dto/create.dto';
 import {
   CreateCategoryResponse,
+  FindAllCategoriesResponse,
   PRODUCT_SERVICE_NAME,
 } from 'src/protos/product.pb';
 import { throwError } from 'rxjs';
@@ -37,5 +38,10 @@ export class CategoryController {
     payload: CreateCategoryDto,
   ): Promise<CreateCategoryResponse> {
     return await this.service.create(payload);
+  }
+
+  @GrpcMethod(PRODUCT_SERVICE_NAME, 'FindAllCategories')
+  async getCategories(): Promise<FindAllCategoriesResponse> {
+    return await this.service.findAll();
   }
 }

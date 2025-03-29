@@ -23,4 +23,13 @@ export class CategoryService extends BaseService<CategoryEntity> {
       data: category,
     };
   }
+
+  async findAll(filter?: any, options?: any): Promise<any> {
+    const categories = await super.findAll(filter, options);
+    return {
+      status: HttpStatus.OK,
+      error: null,
+      data: categories,
+    };
+  }
 }

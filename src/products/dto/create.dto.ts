@@ -5,6 +5,8 @@ import {
   IsOptional,
   isString,
   IsString,
+  Min,
+  min,
 } from 'class-validator';
 import { CreateProductRequest } from 'src/protos/product.pb';
 
@@ -19,10 +21,12 @@ export class CreateProductDto implements CreateProductRequest {
 
   @IsNumber()
   @IsNotEmpty()
+  @Min(0)
   price: number;
 
   @IsNumber()
   @IsNotEmpty()
+  @Min(0)
   stock: number;
 
   @IsString()

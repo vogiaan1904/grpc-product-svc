@@ -34,6 +34,20 @@ export class ProductService extends BaseService<ProductEntity> {
   async create(dto: CreateProductDto): Promise<CreateProductResponse> {
     const { categoryIds, imageUrls, ...productData } = dto;
 
+    const existingProductWithSku = await this.findOne({
+      filter: {
+        sku: productData.sku,
+      },
+    });
+
+    if (existingProductWithSku) {
+      return {
+        status: HttpStatus.BAD_REQUEST,
+        error: ['Product with SKU already exists'],
+        data: null,
+      };
+    }
+
     if (categoryIds.length > 0) {
       const categories = await this.categoryService.findMany({
         filter: {
