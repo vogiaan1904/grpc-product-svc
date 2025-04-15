@@ -1,5 +1,4 @@
 export const ProductErrors = {
-
   PRODUCT_NOT_FOUND: {
     code: 301400,
     message: 'Product not found',
