@@ -1,16 +1,11 @@
+import { INestMicroservice, Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import {
-  INestMicroservice,
-  ValidationPipe,
-  Logger,
-  HttpStatus,
-} from '@nestjs/common';
-import { RpcException, Transport } from '@nestjs/microservices';
+import { Transport } from '@nestjs/microservices';
 import { join } from 'path';
+import { AppModule } from './app.module';
 import { protobufPackage } from './protos/product.pb';
-import { GrpcExceptionFilter } from './products/products.controller';
-import { AllExceptionsFilter } from './common/filters/grpc-exception.filter';
+import { RpcInvalidArgumentException } from './common/exceptions/rpc.exception';
+import { GlobalExceptionFilter } from './common/filters/grpc-exception.filter';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -32,11 +27,13 @@ async function bootstrap() {
       new ValidationPipe({
         transform: true,
         whitelist: true,
-        forbidNonWhitelisted: true,
+        exceptionFactory: (errors) => {
+          throw new RpcInvalidArgumentException('Validation failed');
+        },
       }),
     );
 
-    app.useGlobalFilters(new AllExceptionsFilter());
+    app.useGlobalFilters(new GlobalExceptionFilter());
     app.enableShutdownHooks();
 
     await app.listen();

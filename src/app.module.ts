@@ -3,9 +3,9 @@ import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { CategoryModule } from './categories/categories.module';
-import { DatabaseModule } from './databases/database.module';
-import { ProductModule } from './products/products.module';
+import { CategoryModule } from './modules/categories/category.module';
+import { DatabaseModule } from './modules/databases/database.module';
+import { ProductModule } from './modules/products/products.module';
 
 @Module({
   imports: [

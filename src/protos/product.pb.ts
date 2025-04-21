@@ -5,11 +5,11 @@
 // source: product.proto
 
 /* eslint-disable */
-import { GrpcMethod, GrpcStreamMethod } from '@nestjs/microservices';
-import { Observable } from 'rxjs';
-import { Empty } from './google/protobuf/empty.pb';
+import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
+import { Observable } from "rxjs";
+import { Empty } from "./google/protobuf/empty.pb";
 
-export const protobufPackage = 'product';
+export const protobufPackage = "product";
 
 export interface ImageData {
   id: string;
@@ -33,25 +33,16 @@ export interface ProductData {
   active: boolean;
   categories: CategoryData[];
   images: ImageData[];
-  createdAt: string;
-  updatedAt: string;
 }
 
 /** CreateProduct */
 export interface CreateProductRequest {
   name: string;
-  sku: string;
   stock: number;
   price: number;
   description: string;
   categoryIds: string[];
   imageUrls: string[];
-}
-
-export interface CreateProductResponse {
-  status: number;
-  error: string[];
-  data: ProductData | undefined;
 }
 
 /** FindOne */
@@ -60,9 +51,7 @@ export interface FindByIdRequest {
 }
 
 export interface FindByIdResponse {
-  status: string;
-  error: string[];
-  data: ProductData | undefined;
+  product: ProductData | undefined;
 }
 
 /** Pagination */
@@ -72,12 +61,12 @@ export interface PaginationRequest {
 }
 
 export interface PaginationResponse {
-  totalItems: number;
-  totalPages: number;
+  total: number;
+  totalPage: number;
   currentPage: number;
   perPage: number;
-  next: boolean;
-  prev: boolean;
+  next: number;
+  prev: number;
 }
 
 /** FindMany */
@@ -89,9 +78,7 @@ export interface FindManyRequest {
 }
 
 export interface FindManyResponse {
-  status: number;
-  error: string[];
-  data: ProductData[];
+  products: ProductData[];
   pagination: PaginationResponse | undefined;
 }
 
@@ -105,21 +92,10 @@ export interface UpdateProductRequest {
   imageUrls: string[];
 }
 
-export interface UpdateProductResponse {
-  status: number;
-  error: string[];
-  data: ProductData | undefined;
-}
-
 /** DecreaseStock */
 export interface DecreaseStockRequest {
   id: string;
   quantity: number;
-}
-
-export interface DecreaseStockResponse {
-  status: number;
-  error: string[];
 }
 
 /** ActivateProduct */
@@ -127,19 +103,9 @@ export interface ActivateProductRequest {
   id: string;
 }
 
-export interface ActivateProductResponse {
-  status: number;
-  error: string[];
-}
-
 /** DeleteProduct */
 export interface DeleteProductRequest {
   id: string;
-}
-
-export interface DeleteProductResponse {
-  status: number;
-  error: string[];
 }
 
 /** Category */
@@ -147,52 +113,32 @@ export interface CreateCategoryRequest {
   name: string;
 }
 
-export interface CreateCategoryResponse {
-  status: number;
-  error: string[];
-  data: CategoryData | undefined;
-}
-
 export interface FindAllCategoriesResponse {
-  status: number;
-  error: string[];
-  data: CategoryData[];
+  categories: CategoryData[];
 }
 
-export const PRODUCT_PACKAGE_NAME = 'product';
+export const PRODUCT_PACKAGE_NAME = "product";
 
 export interface ProductServiceClient {
   /** Product */
 
-  createProduct(
-    request: CreateProductRequest,
-  ): Observable<CreateProductResponse>;
+  createProduct(request: CreateProductRequest): Observable<Empty>;
 
   findById(request: FindByIdRequest): Observable<FindByIdResponse>;
 
   findMany(request: FindManyRequest): Observable<FindManyResponse>;
 
-  updateProduct(
-    request: UpdateProductRequest,
-  ): Observable<UpdateProductResponse>;
+  updateProduct(request: UpdateProductRequest): Observable<Empty>;
 
-  decreaseStock(
-    request: DecreaseStockRequest,
-  ): Observable<DecreaseStockResponse>;
+  decreaseStock(request: DecreaseStockRequest): Observable<Empty>;
 
-  activateProduct(
-    request: ActivateProductRequest,
-  ): Observable<ActivateProductResponse>;
+  activateProduct(request: ActivateProductRequest): Observable<Empty>;
 
-  deleteProduct(
-    request: DeleteProductRequest,
-  ): Observable<DeleteProductResponse>;
+  deleteProduct(request: DeleteProductRequest): Observable<Empty>;
 
   /** Category */
 
-  createCategory(
-    request: CreateCategoryRequest,
-  ): Observable<CreateCategoryResponse>;
+  createCategory(request: CreateCategoryRequest): Observable<Empty>;
 
   findAllCategories(request: Empty): Observable<FindAllCategoriesResponse>;
 }
@@ -200,109 +146,52 @@ export interface ProductServiceClient {
 export interface ProductServiceController {
   /** Product */
 
-  createProduct(
-    request: CreateProductRequest,
-  ):
-    | Promise<CreateProductResponse>
-    | Observable<CreateProductResponse>
-    | CreateProductResponse;
+  createProduct(request: CreateProductRequest): void;
 
-  findById(
-    request: FindByIdRequest,
-  ):
-    | Promise<FindByIdResponse>
-    | Observable<FindByIdResponse>
-    | FindByIdResponse;
+  findById(request: FindByIdRequest): Promise<FindByIdResponse> | Observable<FindByIdResponse> | FindByIdResponse;
 
-  findMany(
-    request: FindManyRequest,
-  ):
-    | Promise<FindManyResponse>
-    | Observable<FindManyResponse>
-    | FindManyResponse;
+  findMany(request: FindManyRequest): Promise<FindManyResponse> | Observable<FindManyResponse> | FindManyResponse;
 
-  updateProduct(
-    request: UpdateProductRequest,
-  ):
-    | Promise<UpdateProductResponse>
-    | Observable<UpdateProductResponse>
-    | UpdateProductResponse;
+  updateProduct(request: UpdateProductRequest): void;
 
-  decreaseStock(
-    request: DecreaseStockRequest,
-  ):
-    | Promise<DecreaseStockResponse>
-    | Observable<DecreaseStockResponse>
-    | DecreaseStockResponse;
+  decreaseStock(request: DecreaseStockRequest): void;
 
-  activateProduct(
-    request: ActivateProductRequest,
-  ):
-    | Promise<ActivateProductResponse>
-    | Observable<ActivateProductResponse>
-    | ActivateProductResponse;
+  activateProduct(request: ActivateProductRequest): void;
 
-  deleteProduct(
-    request: DeleteProductRequest,
-  ):
-    | Promise<DeleteProductResponse>
-    | Observable<DeleteProductResponse>
-    | DeleteProductResponse;
+  deleteProduct(request: DeleteProductRequest): void;
 
   /** Category */
 
-  createCategory(
-    request: CreateCategoryRequest,
-  ):
-    | Promise<CreateCategoryResponse>
-    | Observable<CreateCategoryResponse>
-    | CreateCategoryResponse;
+  createCategory(request: CreateCategoryRequest): void;
 
   findAllCategories(
     request: Empty,
-  ):
-    | Promise<FindAllCategoriesResponse>
-    | Observable<FindAllCategoriesResponse>
-    | FindAllCategoriesResponse;
+  ): Promise<FindAllCategoriesResponse> | Observable<FindAllCategoriesResponse> | FindAllCategoriesResponse;
 }
 
 export function ProductServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
-      'createProduct',
-      'findById',
-      'findMany',
-      'updateProduct',
-      'decreaseStock',
-      'activateProduct',
-      'deleteProduct',
-      'createCategory',
-      'findAllCategories',
+      "createProduct",
+      "findById",
+      "findMany",
+      "updateProduct",
+      "decreaseStock",
+      "activateProduct",
+      "deleteProduct",
+      "createCategory",
+      "findAllCategories",
     ];
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcMethod('ProductService', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("ProductService", method)(constructor.prototype[method], method, descriptor);
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcStreamMethod('ProductService', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("ProductService", method)(constructor.prototype[method], method, descriptor);
     }
   };
 }
 
-export const PRODUCT_SERVICE_NAME = 'ProductService';
+export const PRODUCT_SERVICE_NAME = "ProductService";
