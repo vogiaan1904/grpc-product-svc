@@ -7,17 +7,30 @@ import {
   RpcExceptionFilter,
   UseFilters,
 } from '@nestjs/common';
-import { GrpcMethod, Payload, RpcException } from '@nestjs/microservices';
-import { throwError } from 'rxjs';
+import {
+  GrpcMethod,
+  GrpcStreamMethod,
+  Payload,
+  RpcException,
+} from '@nestjs/microservices';
+import { Observable, throwError } from 'rxjs';
 import {
   CreateProductRequest,
+  DecreaseStockRequest,
   FindByIdRequest,
   FindByIdResponse,
   FindManyRequest,
   FindManyResponse,
   PRODUCT_SERVICE_NAME,
+  ProductData,
+  ActivateProductRequest,
+  DeleteProductRequest,
+  CreateCategoryRequest,
+  FindAllCategoriesResponse,
+  UpdateProductRequest,
 } from 'src/protos/product.pb';
 import { ProductService } from './products.service';
+import { Empty } from 'src/protos/google/protobuf/empty.pb';
 
 @Catch(RpcException)
 export class GrpcExceptionFilter implements RpcExceptionFilter<RpcException> {
@@ -36,19 +49,53 @@ export class ProductController {
   private readonly service: ProductService;
 
   @GrpcMethod(PRODUCT_SERVICE_NAME, 'CreateProduct')
-  private async create(req: CreateProductRequest): Promise<void> {
-    await this.service.create(req);
+  createProduct(req: CreateProductRequest): void {
+    this.service.create(req);
   }
 
   @GrpcMethod(PRODUCT_SERVICE_NAME, 'FindById')
-  private async findById(req: FindByIdRequest): Promise<FindByIdResponse> {
-    return await this.service.findById(req.id);
+  async findById(req: FindByIdRequest): Promise<FindByIdResponse> {
+    return this.service.findById(req.id);
   }
 
   @GrpcMethod(PRODUCT_SERVICE_NAME, 'FindMany')
-  private async findMany(
-    @Payload() req: FindManyRequest,
-  ): Promise<FindManyResponse> {
-    return await this.service.findManyWithPagination(req);
+  async findMany(@Payload() req: FindManyRequest): Promise<FindManyResponse> {
+    return this.service.findManyWithPagination(req);
+  }
+
+  @GrpcMethod(PRODUCT_SERVICE_NAME, 'List')
+  list(req: Empty): Observable<ProductData> {
+    return this.service.list(req);
+  }
+
+  @GrpcMethod(PRODUCT_SERVICE_NAME, 'DecreaseStock')
+  async decreaseStock(req: DecreaseStockRequest): Promise<void> {
+    return this.service.decreaseStock(req);
+  }
+
+  @GrpcMethod(PRODUCT_SERVICE_NAME, 'UpdateProduct')
+  updateProduct(req: UpdateProductRequest): void {
+    // TODO: Implement update product
+  }
+
+  @GrpcMethod(PRODUCT_SERVICE_NAME, 'ActivateProduct')
+  activateProduct(req: ActivateProductRequest): void {
+    // TODO: Implement activate product
+  }
+
+  @GrpcMethod(PRODUCT_SERVICE_NAME, 'DeleteProduct')
+  deleteProduct(req: DeleteProductRequest): void {
+    // TODO: Implement delete product
+  }
+
+  @GrpcMethod(PRODUCT_SERVICE_NAME, 'CreateCategory')
+  createCategory(req: CreateCategoryRequest): void {
+    // TODO: Implement create category
+  }
+
+  @GrpcMethod(PRODUCT_SERVICE_NAME, 'FindAllCategories')
+  async findAllCategories(req: Empty): Promise<FindAllCategoriesResponse> {
+    // TODO: Implement find all categories
+    return { categories: [] };
   }
 }

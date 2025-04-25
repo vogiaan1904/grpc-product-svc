@@ -14,6 +14,9 @@ import {
 import { BaseService } from 'src/services/base/base.service';
 import { generateSku } from 'src/utils/sku.util';
 import { FindManyDto } from './dtos/findMany.dto';
+import { Empty } from 'src/protos/google/protobuf/empty.pb';
+import { Observable } from 'rxjs';
+import { DecreaseStockDto } from './dtos/decreaseStock.dto';
 
 @Injectable()
 export class ProductService extends BaseService<Product> {
@@ -166,5 +169,60 @@ export class ProductService extends BaseService<Product> {
         prev: response.metadata.prev,
       },
     };
+  }
+
+  list(req: Empty): Observable<ProductData> {
+    return new Observable<ProductData>((subscriber) => {
+      const processBatches = async () => {
+        try {
+          const totalCount = await this.databaseService.product.count();
+          const batchSize = 100;
+
+          for (let skip = 0; skip < totalCount; skip += batchSize) {
+            const productBatch = await this.databaseService.product.findMany({
+              include: this.defaultInclude,
+              skip,
+              take: batchSize,
+              orderBy: {
+                createdAt: 'desc',
+              },
+            });
+
+            for (const product of productBatch) {
+              const processedProduct = this.processProductResponse(product);
+              subscriber.next(processedProduct);
+            }
+          }
+
+          subscriber.complete();
+        } catch (error) {
+          subscriber.error(error);
+        }
+      };
+
+      processBatches();
+
+      return () => {
+        console.log('ProductService - Stream teardown');
+      };
+    });
+  }
+
+  async decreaseStock(dto: DecreaseStockDto): Promise<void> {
+    const { id, quantity } = dto;
+    const product = await this.findOne({ id });
+    if (!product) {
+      throw new RpcInvalidArgumentException(ProductErrors.PRODUCT_NOT_FOUND);
+    }
+    if (product.stock < quantity) {
+      throw new RpcInvalidArgumentException(
+        ProductErrors.PRODUCT_STOCK_NOT_ENOUGH,
+      );
+    }
+
+    await this.databaseService.product.update({
+      where: { id },
+      data: { stock: { decrement: quantity } },
+    });
   }
 }

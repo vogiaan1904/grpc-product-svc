@@ -128,6 +128,8 @@ export interface ProductServiceClient {
 
   findMany(request: FindManyRequest): Observable<FindManyResponse>;
 
+  list(request: Empty): Observable<ProductData>;
+
   updateProduct(request: UpdateProductRequest): Observable<Empty>;
 
   decreaseStock(request: DecreaseStockRequest): Observable<Empty>;
@@ -152,6 +154,8 @@ export interface ProductServiceController {
 
   findMany(request: FindManyRequest): Promise<FindManyResponse> | Observable<FindManyResponse> | FindManyResponse;
 
+  list(request: Empty): Observable<ProductData>;
+
   updateProduct(request: UpdateProductRequest): void;
 
   decreaseStock(request: DecreaseStockRequest): void;
@@ -175,6 +179,7 @@ export function ProductServiceControllerMethods() {
       "createProduct",
       "findById",
       "findMany",
+      "list",
       "updateProduct",
       "decreaseStock",
       "activateProduct",
