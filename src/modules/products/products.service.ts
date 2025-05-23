@@ -1,22 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { Product } from '@prisma/client';
+import { Observable } from 'rxjs';
 import { ProductErrors } from 'src/common/constants/errors.constants';
 import { RpcInvalidArgumentException } from 'src/common/exceptions/rpc.exception';
 import { CategoryService } from 'src/modules/categories/category.service';
 import { DatabaseService } from 'src/modules/databases/database.service';
+import { Empty } from 'src/protos/google/protobuf/empty.pb';
 import {
   CreateProductRequest,
   FindByIdResponse,
   FindManyRequest,
   FindManyResponse,
+  ListRequest,
   ProductData,
+  ReleaseInventoryRequest,
+  ReserveInventoryRequest,
+  UpdateStockRequest,
 } from 'src/protos/product.pb';
 import { BaseService } from 'src/services/base/base.service';
 import { generateSku } from 'src/utils/sku.util';
-import { FindManyDto } from './dtos/findMany.dto';
-import { Empty } from 'src/protos/google/protobuf/empty.pb';
-import { Observable } from 'rxjs';
-import { DecreaseStockDto } from './dtos/decreaseStock.dto';
+import { ProductEntity } from './dtos/response.dto';
 
 @Injectable()
 export class ProductService extends BaseService<Product> {
@@ -24,7 +27,7 @@ export class ProductService extends BaseService<Product> {
     private readonly databaseService: DatabaseService,
     private readonly categoryService: CategoryService,
   ) {
-    super(databaseService, 'product');
+    super(databaseService, 'product', ProductEntity);
   }
 
   private defaultInclude = {
@@ -81,7 +84,7 @@ export class ProductService extends BaseService<Product> {
     return filter;
   }
 
-  async create(dto: CreateProductRequest): Promise<void> {
+  async create(dto: CreateProductRequest): Promise<Product> {
     const { categoryIds, imageUrls, ...productData } = dto;
     const safeCategoryIds = categoryIds ?? [];
     const safeImageUrls = imageUrls ?? [];
@@ -99,7 +102,7 @@ export class ProductService extends BaseService<Product> {
 
     const sku = generateSku(safeCategoryIds);
 
-    await super.create({
+    const product = await super.create({
       ...productData,
       sku,
       categories: {
@@ -116,6 +119,8 @@ export class ProductService extends BaseService<Product> {
         })),
       },
     });
+
+    return product;
   }
 
   async findById(id: string): Promise<FindByIdResponse> {
@@ -171,18 +176,20 @@ export class ProductService extends BaseService<Product> {
     };
   }
 
-  list(req: Empty): Observable<ProductData> {
+  list(dto: ListRequest): Observable<ProductData> {
     return new Observable<ProductData>((subscriber) => {
       const processBatches = async () => {
         try {
-          const totalCount = await this.databaseService.product.count();
           const batchSize = 100;
+          const { ids } = dto;
 
-          for (let skip = 0; skip < totalCount; skip += batchSize) {
+          for (let skip = 0; skip < ids.length; skip += batchSize) {
+            const batchIds = ids.slice(skip, skip + batchSize);
             const productBatch = await this.databaseService.product.findMany({
               include: this.defaultInclude,
-              skip,
-              take: batchSize,
+              where: {
+                id: { in: batchIds },
+              },
               orderBy: {
                 createdAt: 'desc',
               },
@@ -208,21 +215,35 @@ export class ProductService extends BaseService<Product> {
     });
   }
 
-  async decreaseStock(dto: DecreaseStockDto): Promise<void> {
+  async reserveInventory(dto: ReserveInventoryRequest): Promise<void> {
     const { id, quantity } = dto;
     const product = await this.findOne({ id });
     if (!product) {
       throw new RpcInvalidArgumentException(ProductErrors.PRODUCT_NOT_FOUND);
     }
-    if (product.stock < quantity) {
+
+    const availableStock = product.totalStock - product.reservedStock;
+    if (availableStock < quantity) {
       throw new RpcInvalidArgumentException(
         ProductErrors.PRODUCT_STOCK_NOT_ENOUGH,
       );
     }
 
-    await this.databaseService.product.update({
-      where: { id },
-      data: { stock: { decrement: quantity } },
-    });
+    await this.update({ id }, { reservedStock: { increment: quantity } });
+  }
+
+  async releaseInventory(dto: ReleaseInventoryRequest): Promise<void> {
+    const { id, quantity } = dto;
+    const product = await this.findOne({ id });
+    if (!product) {
+      throw new RpcInvalidArgumentException(ProductErrors.PRODUCT_NOT_FOUND);
+    }
+
+    await this.update({ id }, { reservedStock: { decrement: quantity } });
+  }
+
+  async updateStock(dto: UpdateStockRequest): Promise<void> {
+    const { id, quantity } = dto;
+    await this.update({ id }, { totalStock: quantity });
   }
 }

@@ -1,6 +1,6 @@
 export interface BaseServiceInterface<T> {
   create(data: any): Promise<T>;
-  findOne(filter: any): Promise<T>;
+  findOne(filter: any): Promise<T | null>;
   findAll(filter?: any, options?: any): Promise<T[]>;
   findMany(
     filter?,

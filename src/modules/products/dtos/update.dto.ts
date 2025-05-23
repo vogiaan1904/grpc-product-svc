@@ -1,4 +1,3 @@
-import { Image } from '@prisma/client';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateProductDto {

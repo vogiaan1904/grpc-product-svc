@@ -26,18 +26,19 @@ model Image {
 }
 
 model Product {
-  id          String            @id @default(cuid())
-  name        String
-  description String?
-  sku         String            @unique
-  stock       Int
-  price       Float
-  active      Boolean           @default(true)
-  images      Image[]
-  categories  ProductCategory[]
-  reviews     Review[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id            String            @id @default(cuid())
+  name          String
+  description   String?
+  sku           String            @unique
+  totalStock    Int
+  reservedStock Int               @default(0)
+  price         Float
+  active        Boolean           @default(true)
+  images        Image[]
+  categories    ProductCategory[]
+  reviews       Review[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   @@index([sku])
   @@map("products")

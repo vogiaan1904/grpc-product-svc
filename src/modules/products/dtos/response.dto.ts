@@ -9,11 +9,10 @@ export class ProductEntity implements Product {
   name: string;
   description: string;
   price: number;
-  stock: number;
+  totalStock: number;
+  reservedStock: number;
   sku: string;
   active: boolean;
-  categories: ProductCategory[];
-  images: ProductImage[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,4 +27,9 @@ class ProductCategory {
   id: string;
   name: string;
   slug: string;
+}
+
+export class ProductResponseDto extends ProductEntity {
+  categories: ProductCategory[];
+  images: ProductImage[];
 }

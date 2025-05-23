@@ -11,13 +11,15 @@ export abstract class BaseService<T> implements BaseServiceInterface<T> {
   constructor(
     private prisma: DatabaseService,
     private model: string,
+    private entity: any,
   ) {}
 
-  async findAll(filter?: any, options?: any) {
-    return await this.prisma[this.model].findMany({
+  async findAll(filter?: any, options?: any): Promise<T[]> {
+    const data = await this.prisma[this.model].findMany({
       where: filter,
       ...options,
     });
+    return data.map((item) => new this.entity(item));
   }
 
   async findMany({
@@ -46,7 +48,7 @@ export abstract class BaseService<T> implements BaseServiceInterface<T> {
       },
     );
     return {
-      items: response.data as T[],
+      items: response.data.map((item) => new this.entity(item)),
       metadata: {
         total: response.meta.total,
         currentPage: response.meta.currentPage,
@@ -58,33 +60,35 @@ export abstract class BaseService<T> implements BaseServiceInterface<T> {
     };
   }
 
-  async findOne(filter: any, options?: any) {
-    const data = await this.prisma[this.model].findUnique({
+  async findOne(filter: any, options?: any): Promise<T | null> {
+    const item = await this.prisma[this.model].findUnique({
       where: filter,
       ...options,
     });
-    if (!data) {
+    if (!item) {
       return null;
     }
-    return data;
+    return new this.entity(item);
   }
 
-  async create(data: any, options?: any) {
-    return await this.prisma[this.model].create({
+  async create(data: any, options?: any): Promise<T> {
+    const item = await this.prisma[this.model].create({
       data,
       ...options,
     });
+    return new this.entity(item);
   }
 
-  async update(filter: any, data: any, options?: any) {
-    return await this.prisma[this.model].update({
+  async update(filter: any, data: any, options?: any): Promise<T> {
+    const item = await this.prisma[this.model].update({
       where: filter,
       data,
       ...options,
     });
+    return new this.entity(item);
   }
 
-  async delete(filter: any) {
+  async delete(filter: any): Promise<void> {
     await this.prisma[this.model].delete({
       where: filter,
     });

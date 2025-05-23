@@ -82,6 +82,10 @@ export interface FindManyResponse {
   pagination: PaginationResponse | undefined;
 }
 
+export interface ListRequest {
+  ids: string[];
+}
+
 /** UpdateProduct */
 export interface UpdateProductRequest {
   id: string;
@@ -92,8 +96,19 @@ export interface UpdateProductRequest {
   imageUrls: string[];
 }
 
-/** DecreaseStock */
-export interface DecreaseStockRequest {
+/** ReserveInventory */
+export interface ReserveInventoryRequest {
+  id: string;
+  quantity: number;
+}
+
+/** ReleaseInventory */
+export interface ReleaseInventoryRequest {
+  id: string;
+  quantity: number;
+}
+
+export interface UpdateStockRequest {
   id: string;
   quantity: number;
 }
@@ -128,15 +143,19 @@ export interface ProductServiceClient {
 
   findMany(request: FindManyRequest): Observable<FindManyResponse>;
 
-  list(request: Empty): Observable<ProductData>;
+  list(request: ListRequest): Observable<ProductData>;
 
   updateProduct(request: UpdateProductRequest): Observable<Empty>;
 
-  decreaseStock(request: DecreaseStockRequest): Observable<Empty>;
+  reserveInventory(request: ReserveInventoryRequest): Observable<Empty>;
+
+  releaseInventory(request: ReleaseInventoryRequest): Observable<Empty>;
 
   activateProduct(request: ActivateProductRequest): Observable<Empty>;
 
   deleteProduct(request: DeleteProductRequest): Observable<Empty>;
+
+  updateStock(request: UpdateStockRequest): Observable<Empty>;
 
   /** Category */
 
@@ -154,15 +173,19 @@ export interface ProductServiceController {
 
   findMany(request: FindManyRequest): Promise<FindManyResponse> | Observable<FindManyResponse> | FindManyResponse;
 
-  list(request: Empty): Observable<ProductData>;
+  list(request: ListRequest): Observable<ProductData>;
 
   updateProduct(request: UpdateProductRequest): void;
 
-  decreaseStock(request: DecreaseStockRequest): void;
+  reserveInventory(request: ReserveInventoryRequest): void;
+
+  releaseInventory(request: ReleaseInventoryRequest): void;
 
   activateProduct(request: ActivateProductRequest): void;
 
   deleteProduct(request: DeleteProductRequest): void;
+
+  updateStock(request: UpdateStockRequest): void;
 
   /** Category */
 
@@ -181,9 +204,11 @@ export function ProductServiceControllerMethods() {
       "findMany",
       "list",
       "updateProduct",
-      "decreaseStock",
+      "reserveInventory",
+      "releaseInventory",
       "activateProduct",
       "deleteProduct",
+      "updateStock",
       "createCategory",
       "findAllCategories",
     ];
