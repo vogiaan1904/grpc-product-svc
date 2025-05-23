@@ -12,6 +12,7 @@ import {
   FindManyRequest,
   FindManyResponse,
   ListRequest,
+  ListResponse,
   ProductData,
   ReleaseInventoryRequest,
   ReserveInventoryRequest,
@@ -176,7 +177,7 @@ export class ProductService extends BaseService<Product> {
     };
   }
 
-  list(dto: ListRequest): Observable<ProductData> {
+  listStream(dto: ListRequest): Observable<ProductData> {
     return new Observable<ProductData>((subscriber) => {
       const processBatches = async () => {
         try {
@@ -213,6 +214,18 @@ export class ProductService extends BaseService<Product> {
         console.log('ProductService - Stream teardown');
       };
     });
+  }
+
+  async list(dto: ListRequest): Promise<ListResponse> {
+    const { ids } = dto;
+    const products = await this.databaseService.product.findMany({
+      where: { id: { in: ids } },
+      include: this.defaultInclude,
+    });
+
+    return {
+      products: products.map((product) => this.processProductResponse(product)),
+    };
   }
 
   async reserveInventory(dto: ReserveInventoryRequest): Promise<void> {

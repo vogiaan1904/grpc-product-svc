@@ -57,6 +57,11 @@ export interface CreateRequest {
   userId: string;
 }
 
+export interface CreateResponse {
+  orderId: string;
+  workflowId: string;
+}
+
 /** FindOne */
 export interface FindOneRequest {
   id: string;

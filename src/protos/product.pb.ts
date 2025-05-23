@@ -86,6 +86,10 @@ export interface ListRequest {
   ids: string[];
 }
 
+export interface ListResponse {
+  products: ProductData[];
+}
+
 /** UpdateProduct */
 export interface UpdateProductRequest {
   id: string;
@@ -143,7 +147,9 @@ export interface ProductServiceClient {
 
   findMany(request: FindManyRequest): Observable<FindManyResponse>;
 
-  list(request: ListRequest): Observable<ProductData>;
+  listStream(request: ListRequest): Observable<ProductData>;
+
+  list(request: ListRequest): Observable<ListResponse>;
 
   updateProduct(request: UpdateProductRequest): Observable<Empty>;
 
@@ -173,7 +179,9 @@ export interface ProductServiceController {
 
   findMany(request: FindManyRequest): Promise<FindManyResponse> | Observable<FindManyResponse> | FindManyResponse;
 
-  list(request: ListRequest): Observable<ProductData>;
+  listStream(request: ListRequest): Observable<ProductData>;
+
+  list(request: ListRequest): Promise<ListResponse> | Observable<ListResponse> | ListResponse;
 
   updateProduct(request: UpdateProductRequest): void;
 
@@ -202,6 +210,7 @@ export function ProductServiceControllerMethods() {
       "createProduct",
       "findById",
       "findMany",
+      "listStream",
       "list",
       "updateProduct",
       "reserveInventory",

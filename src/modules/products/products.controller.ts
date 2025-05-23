@@ -15,6 +15,7 @@ import {
   CreateCategoryRequest,
   FindAllCategoriesResponse,
   FindManyResponse,
+  ListResponse,
   PRODUCT_SERVICE_NAME,
   ProductData,
 } from 'src/protos/product.pb';
@@ -61,8 +62,13 @@ export class ProductController {
     return this.service.findManyWithPagination(req);
   }
 
+  @GrpcMethod(PRODUCT_SERVICE_NAME, 'ListStream')
+  listStream(req: ListDto): Observable<ProductData> {
+    return this.service.listStream(req);
+  }
+
   @GrpcMethod(PRODUCT_SERVICE_NAME, 'List')
-  list(req: ListDto): Observable<ProductData> {
+  list(req: ListDto): Promise<ListResponse> {
     return this.service.list(req);
   }
 
