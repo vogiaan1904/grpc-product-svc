@@ -101,20 +101,33 @@ export interface UpdateProductRequest {
 }
 
 /** ReserveInventory */
-export interface ReserveInventoryRequest {
-  id: string;
+export interface ReserveInventoryItem {
+  productId: string;
   quantity: number;
 }
 
+export interface ReserveInventoryRequest {
+  items: ReserveInventoryItem[];
+}
+
 /** ReleaseInventory */
+export interface ReleaseInventoryItem {
+  productId: string;
+  quantity: number;
+}
+
 export interface ReleaseInventoryRequest {
-  id: string;
+  items: ReleaseInventoryItem[];
+}
+
+/** UpdateStock */
+export interface UpdateStockItem {
+  productId: string;
   quantity: number;
 }
 
 export interface UpdateStockRequest {
-  id: string;
-  quantity: number;
+  items: UpdateStockItem[];
 }
 
 /** ActivateProduct */

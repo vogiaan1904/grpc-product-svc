@@ -3,6 +3,8 @@ export const ProductErrors = {
   PRODUCT_ALREADY_EXISTS: 'Product already exists',
   PRODUCT_NOT_FOUND_OR_DELETED: 'Product not found or deleted',
   PRODUCT_STOCK_NOT_ENOUGH: 'Product stock not enough',
+  PRODUCT_RESERVED_STOCK_NOT_ENOUGH: 'Product reserved stock not enough',
+  PRODUCT_UPDATE_STOCK_FAILED: 'Product update stock failed',
   PRODUCT_NOT_ACTIVE: 'Product not active',
   PRODUCT_NOT_FOUND_IN_CART: 'Product not found in cart',
   PRODUCT_NOT_FOUND_IN_WISHLIST: 'Product not found in wishlist',
@@ -24,6 +26,8 @@ export const ProductErrors = {
   PRODUCT_NOT_FOUND_IN_SAME_CATEGORY: 'Product not found in same category',
   PRODUCT_NOT_FOUND_IN_SAME_SUB_CATEGORY:
     'Product not found in same sub category',
+  PRODUCT_RESERVE_INVENTORY_FAILED: 'Product reserve inventory failed',
+  PRODUCT_RELEASE_INVENTORY_FAILED: 'Product release inventory failed',
   PRODUCT_NOT_FOUND_IN_SAME_COLLECTION: 'Product not found in same collection',
   PRODUCT_NOT_FOUND_IN_SAME_DESIGNER: 'Product not found in same designer',
   PRODUCT_NOT_FOUND_IN_SAME_MAKER: 'Product not found in same maker',

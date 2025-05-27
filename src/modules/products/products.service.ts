@@ -1,8 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Product } from '@prisma/client';
 import { Observable } from 'rxjs';
 import { ProductErrors } from 'src/common/constants/errors.constants';
-import { RpcInvalidArgumentException } from 'src/common/exceptions/rpc.exception';
+import {
+  RpcInternalException,
+  RpcInvalidArgumentException,
+} from 'src/common/exceptions/rpc.exception';
 import { CategoryService } from 'src/modules/categories/category.service';
 import { DatabaseService } from 'src/modules/databases/database.service';
 import { Empty } from 'src/protos/google/protobuf/empty.pb';
@@ -24,6 +27,7 @@ import { ProductEntity } from './dtos/response.dto';
 
 @Injectable()
 export class ProductService extends BaseService<Product> {
+  private readonly logger = new Logger(ProductService.name);
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly categoryService: CategoryService,
@@ -229,34 +233,177 @@ export class ProductService extends BaseService<Product> {
   }
 
   async reserveInventory(dto: ReserveInventoryRequest): Promise<void> {
-    const { id, quantity } = dto;
-    const product = await this.findOne({ id });
-    if (!product) {
-      throw new RpcInvalidArgumentException(ProductErrors.PRODUCT_NOT_FOUND);
+    const { items } = dto;
+    const productIds = items.map((item) => item.productId);
+    const products = await this.databaseService.product.findMany({
+      where: { id: { in: productIds } },
+      select: {
+        id: true,
+        totalStock: true,
+        reservedStock: true,
+      },
+    });
+
+    const productMap = new Map(products.map((p) => [p.id, p]));
+
+    for (const item of items) {
+      const product = productMap.get(item.productId);
+      if (!product) {
+        throw new RpcInvalidArgumentException(ProductErrors.PRODUCT_NOT_FOUND);
+      }
+
+      const availableStock = product.totalStock - product.reservedStock;
+      if (availableStock < item.quantity) {
+        throw new RpcInvalidArgumentException(
+          ProductErrors.PRODUCT_STOCK_NOT_ENOUGH,
+        );
+      }
     }
 
-    const availableStock = product.totalStock - product.reservedStock;
-    if (availableStock < quantity) {
-      throw new RpcInvalidArgumentException(
-        ProductErrors.PRODUCT_STOCK_NOT_ENOUGH,
+    try {
+      await this.databaseService.$transaction(async (tx) => {
+        await Promise.all(
+          items.map((item) =>
+            tx.product.update({
+              where: {
+                id: item.productId,
+              },
+              data: {
+                reservedStock: { increment: item.quantity },
+              },
+            }),
+          ),
+        );
+      });
+    } catch (error) {
+      console.log('reserveInventory error', error);
+      throw new RpcInternalException(
+        ProductErrors.PRODUCT_RESERVE_INVENTORY_FAILED,
       );
     }
-
-    await this.update({ id }, { reservedStock: { increment: quantity } });
   }
 
   async releaseInventory(dto: ReleaseInventoryRequest): Promise<void> {
-    const { id, quantity } = dto;
-    const product = await this.findOne({ id });
-    if (!product) {
-      throw new RpcInvalidArgumentException(ProductErrors.PRODUCT_NOT_FOUND);
+    const { items } = dto;
+    const productIds = items.map((item) => item.productId);
+    const products = await this.databaseService.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, totalStock: true, reservedStock: true },
+    });
+
+    const productMap = new Map(products.map((p) => [p.id, p]));
+
+    for (const item of items) {
+      const product = productMap.get(item.productId);
+      if (!product) {
+        throw new RpcInvalidArgumentException(ProductErrors.PRODUCT_NOT_FOUND);
+      }
+
+      if (item.quantity > product.reservedStock) {
+        throw new RpcInvalidArgumentException(
+          ProductErrors.PRODUCT_STOCK_NOT_ENOUGH,
+        );
+      }
     }
 
-    await this.update({ id }, { reservedStock: { decrement: quantity } });
+    try {
+      await this.databaseService.$transaction(async (tx) => {
+        await Promise.all(
+          items.map((item) =>
+            tx.product.update({
+              where: {
+                id: item.productId,
+              },
+              data: {
+                reservedStock: { decrement: item.quantity },
+              },
+            }),
+          ),
+        );
+      });
+    } catch (error) {
+      console.log('releaseInventory error', error);
+      throw new RpcInternalException(
+        ProductErrors.PRODUCT_RELEASE_INVENTORY_FAILED,
+      );
+    }
   }
 
   async updateStock(dto: UpdateStockRequest): Promise<void> {
-    const { id, quantity } = dto;
-    await this.update({ id }, { totalStock: quantity });
+    const { items } = dto;
+    const productIds = items.map((item) => item.productId);
+    const existingProducts = await this.databaseService.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, totalStock: true, reservedStock: true },
+    });
+
+    if (existingProducts.length !== productIds.length) {
+      const foundIds = existingProducts.map((p) => p.id);
+      const missingIds = productIds.filter((id) => !foundIds.includes(id));
+      this.logger.error(`Products not found: ${missingIds.join(', ')}`, {
+        productIds,
+        foundIds,
+        missingIds,
+      });
+      throw new RpcInvalidArgumentException(
+        ProductErrors.PRODUCT_NOT_FOUND_IN_ORDER,
+      );
+    }
+
+    const productMap = new Map(existingProducts.map((p) => [p.id, p]));
+
+    const updates = [];
+    for (const item of items) {
+      const product = productMap.get(item.productId);
+
+      const newTotalStock = product.totalStock - item.quantity;
+      const newReservedStock = product.reservedStock - item.quantity;
+
+      if (newTotalStock < 0) {
+        this.logger.error(
+          `Insufficient stock for product ${item.productId}: requested ${item.quantity}, available ${product.totalStock}`,
+        );
+        throw new RpcInvalidArgumentException(
+          ProductErrors.PRODUCT_STOCK_NOT_ENOUGH,
+        );
+      }
+
+      if (newReservedStock < 0) {
+        this.logger.error(
+          `Inconsistent reserved stock for product ${item.productId}`,
+        );
+        throw new RpcInvalidArgumentException(
+          ProductErrors.PRODUCT_RESERVED_STOCK_NOT_ENOUGH,
+        );
+      }
+
+      updates.push({
+        id: item.productId,
+        totalStock: newTotalStock,
+        reservedStock: newReservedStock,
+      });
+    }
+
+    try {
+      await this.databaseService.$transaction(async (tx) => {
+        for (const update of updates) {
+          await tx.product.update({
+            where: { id: update.id },
+            data: {
+              totalStock: update.totalStock,
+              reservedStock: update.reservedStock,
+            },
+          });
+        }
+      });
+    } catch (error) {
+      this.logger.error('Failed to update stock', {
+        error: error.message,
+        items,
+        timestamp: new Date().toISOString(),
+      });
+
+      throw new RpcInternalException(ProductErrors.PRODUCT_UPDATE_STOCK_FAILED);
+    }
   }
 }
