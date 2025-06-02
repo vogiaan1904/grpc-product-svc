@@ -13,12 +13,13 @@ export const protobufPackage = "order";
 
 export enum OrderStatus {
   ORDER_STATUS_UNSPECIFIED = 0,
-  PROCESSING = 1,
+  CREATED = 1,
   COMPLETED = 2,
   CANCELLED = 3,
-  PENDING = 4,
-  PAYMENT_FAILED = 5,
-  PAYMENT_SUCCESS = 6,
+  INVENTORY_RESERVED = 4,
+  PAYMENT_PENDING = 5,
+  PAYMENT_FAILED = 6,
+  PAYMENT_SUCCESS = 7,
   UNRECOGNIZED = -1,
 }
 
@@ -32,6 +33,7 @@ export enum OrderWorkflowStatus {
 
 export interface OrderData {
   id: string;
+  code: string;
   items: OrderItem[];
   userId: string;
   status: OrderStatus;
@@ -58,13 +60,15 @@ export interface CreateRequest {
 }
 
 export interface CreateResponse {
-  orderId: string;
+  orderCode: string;
   workflowId: string;
+  paymentUrl: string;
 }
 
 /** FindOne */
 export interface FindOneRequest {
-  id: string;
+  id?: string | undefined;
+  code?: string | undefined;
 }
 
 export interface FindOneResponse {
@@ -83,19 +87,19 @@ export interface FindManyResponse {
 
 /** UpdateStatus */
 export interface UpdateStatusRequest {
-  id: string;
+  id?: string | undefined;
+  code?: string | undefined;
   status: OrderStatus;
 }
 
 export interface OrderWorkflowParams {
-  orderId: string;
+  orderCode: string;
   userId: string;
-  items: OrderItem[];
   totalAmount: number;
 }
 
 export interface OrderWorkflowResult {
-  orderId: string;
+  orderCode: string;
   status: string;
   errorMessage: string;
 }
@@ -103,7 +107,7 @@ export interface OrderWorkflowResult {
 export const ORDER_PACKAGE_NAME = "order";
 
 export interface OrderServiceClient {
-  create(request: CreateRequest): Observable<Empty>;
+  create(request: CreateRequest): Observable<CreateResponse>;
 
   findOne(request: FindOneRequest): Observable<FindOneResponse>;
 
@@ -113,7 +117,7 @@ export interface OrderServiceClient {
 }
 
 export interface OrderServiceController {
-  create(request: CreateRequest): void;
+  create(request: CreateRequest): Promise<CreateResponse> | Observable<CreateResponse> | CreateResponse;
 
   findOne(request: FindOneRequest): Promise<FindOneResponse> | Observable<FindOneResponse> | FindOneResponse;
 

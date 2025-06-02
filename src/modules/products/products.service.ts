@@ -90,7 +90,7 @@ export class ProductService extends BaseService<Product> {
   }
 
   async create(dto: CreateProductRequest): Promise<Product> {
-    const { categoryIds, imageUrls, ...productData } = dto;
+    const { categoryIds, imageUrls, name, description, price, stock } = dto;
     const safeCategoryIds = categoryIds ?? [];
     const safeImageUrls = imageUrls ?? [];
 
@@ -108,7 +108,10 @@ export class ProductService extends BaseService<Product> {
     const sku = generateSku(safeCategoryIds);
 
     const product = await super.create({
-      ...productData,
+      name,
+      description,
+      price,
+      totalStock: stock,
       sku,
       categories: {
         create: safeCategoryIds.map((id) => ({
@@ -221,11 +224,14 @@ export class ProductService extends BaseService<Product> {
   }
 
   async list(dto: ListRequest): Promise<ListResponse> {
+    console.log('check svc: ', dto);
     const { ids } = dto;
     const products = await this.databaseService.product.findMany({
       where: { id: { in: ids } },
       include: this.defaultInclude,
     });
+
+    console.log('check svc products: ', products);
 
     return {
       products: products.map((product) => this.processProductResponse(product)),

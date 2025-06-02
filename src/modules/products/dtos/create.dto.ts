@@ -29,11 +29,7 @@ export class CreateProductDto implements CreateProductRequest {
   @Min(0)
   stock: number;
 
-  @IsString()
-  @IsNotEmpty()
-  sku: string;
-
-  @IsNotEmpty()
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   categoryIds: string[] = [];

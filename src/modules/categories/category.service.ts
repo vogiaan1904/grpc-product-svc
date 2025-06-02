@@ -7,11 +7,11 @@ import { generateSlug } from 'src/utils/slug.util';
 @Injectable()
 export class CategoryService extends BaseService<CategoryEntity> {
   constructor(prisma: DatabaseService) {
-    super(prisma, 'category');
+    super(prisma, 'category', CategoryEntity);
   }
 
-  async create(dto: CreateCategoryDto): Promise<void> {
-    await super.create({
+  async create(dto: CreateCategoryDto): Promise<CategoryEntity> {
+    return await super.create({
       ...dto,
       slug: generateSlug(dto.name),
     });

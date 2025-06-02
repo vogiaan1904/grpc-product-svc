@@ -27,7 +27,8 @@ export interface ProductData {
   id: string;
   name: string;
   sku: string;
-  stock: number;
+  totalStock: number;
+  reservedStock: number;
   price: number;
   description: string;
   active: boolean;

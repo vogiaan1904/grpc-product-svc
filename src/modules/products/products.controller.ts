@@ -68,8 +68,9 @@ export class ProductController {
   }
 
   @GrpcMethod(PRODUCT_SERVICE_NAME, 'List')
-  list(req: ListDto): Promise<ListResponse> {
-    return this.service.list(req);
+  async list(req: ListDto): Promise<ListResponse> {
+    console.log('list', req);
+    return await this.service.list(req);
   }
 
   @GrpcMethod(PRODUCT_SERVICE_NAME, 'UpdateProduct')
