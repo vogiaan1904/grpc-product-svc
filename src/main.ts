@@ -28,6 +28,7 @@ async function bootstrap() {
         transform: true,
         whitelist: true,
         exceptionFactory: (errors) => {
+          console.log(errors);
           throw new RpcInvalidArgumentException('Validation failed');
         },
       }),

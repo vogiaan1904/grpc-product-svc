@@ -239,6 +239,7 @@ export class ProductService extends BaseService<Product> {
   }
 
   async reserveInventory(dto: ReserveInventoryRequest): Promise<void> {
+    console.debug('reserveInventory: ', dto);
     const { items } = dto;
     const productIds = items.map((item) => item.productId);
     const products = await this.databaseService.product.findMany({

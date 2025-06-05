@@ -18,6 +18,7 @@ import {
   ListResponse,
   PRODUCT_SERVICE_NAME,
   ProductData,
+  ReserveInventoryRequest,
 } from 'src/protos/product.pb';
 import {
   CreateProductDto,
@@ -89,7 +90,7 @@ export class ProductController {
   }
 
   @GrpcMethod(PRODUCT_SERVICE_NAME, 'ReserveInventory')
-  async reserveInventory(req: ReserveStockDto) {
+  async reserveInventory(req: ReserveInventoryRequest) {
     await this.service.reserveInventory(req);
   }
 
