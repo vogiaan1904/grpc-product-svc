@@ -9,6 +9,7 @@ import { GlobalExceptionFilter } from './common/filters/grpc-exception.filter';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
+  const PORT = process.env.PORT || 50053;
 
   try {
     const app: INestMicroservice = await NestFactory.createMicroservice(
@@ -16,7 +17,7 @@ async function bootstrap() {
       {
         transport: Transport.GRPC,
         options: {
-          url: '0.0.0.0:50053',
+          url: `0.0.0.0:${PORT}`,
           package: protobufPackage,
           protoPath: join('node_modules/grpc-nest-proto/proto/product.proto'),
         },

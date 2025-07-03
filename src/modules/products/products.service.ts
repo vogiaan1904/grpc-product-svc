@@ -224,14 +224,12 @@ export class ProductService extends BaseService<Product> {
   }
 
   async list(dto: ListRequest): Promise<ListResponse> {
-    console.log('check svc: ', dto);
     const { ids } = dto;
     const products = await this.databaseService.product.findMany({
       where: { id: { in: ids } },
       include: this.defaultInclude,
     });
 
-    console.log('check svc products: ', products);
 
     return {
       products: products.map((product) => this.processProductResponse(product)),
@@ -239,7 +237,6 @@ export class ProductService extends BaseService<Product> {
   }
 
   async reserveInventory(dto: ReserveInventoryRequest): Promise<void> {
-    console.debug('reserveInventory: ', dto);
     const { items } = dto;
     const productIds = items.map((item) => item.productId);
     const products = await this.databaseService.product.findMany({

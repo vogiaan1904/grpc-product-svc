@@ -19,7 +19,7 @@ import { ProductModule } from './modules/products/products.module';
         DATABASE_USERNAME: Joi.string(),
         DATABASE_PASSWORD: Joi.string(),
         DATABASE_PORT: Joi.number(),
-        DATABASE_URI: Joi.string(),
+        DATABASE_URL: Joi.string(),
         //...
       }),
       validationOptions: {

@@ -18,6 +18,10 @@ export class GlobalExceptionFilter implements RpcExceptionFilter<any> {
     } else if (exception instanceof RpcException) {
       const rpcError = exception.getError() as any;
       if (rpcError.code !== undefined) {
+        this.logger.error(
+          `Error: ${rpcError.message}`,
+          rpcError.stack,
+        );
         return throwError(() => rpcError);
       } else {
         return throwError(
